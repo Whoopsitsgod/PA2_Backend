@@ -10,7 +10,7 @@ def launch (**kw):
 class ICantThinkOfAGoodName ():
     def __init__ (self):
         print("test")
-        core.addListener(self)
+        core.addListeners(self)
 
     def _handle_PacketIn (self, event):
         print("packet!")
