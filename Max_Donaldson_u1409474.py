@@ -14,3 +14,7 @@ class ICantThinkOfAGoodName ():
 
     def _handle_PacketIn (self, event):
         print("packet!")
+
+    def _handle_GoingUpEvent (self, event):
+        core.openflow.addListeners(self)
+        print("another test, pray to lordy it works")
