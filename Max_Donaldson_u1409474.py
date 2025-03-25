@@ -23,12 +23,13 @@ class MyComponent (object):
     core.openflow.addListeners(self)
  
   def _handle_ConnectionUp (self, event):
-    print("Switch %s has come up.", dpid_to_str(event.dpid))
+    print(f"Switch %s has come up.", dpid_to_str(event.dpid))
          
   def _handle_PacketIn (self, event):
-    print("packet recieved!")
+    print(f"packet recieved!")
     log.debug(event.port)
     log.debug(event.parse)
+    self._flood(event)
     
   def _handle_GoingUpEvent (self, event):
     core.openflow.addListeners(self)
