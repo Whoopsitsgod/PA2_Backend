@@ -24,3 +24,6 @@ class MyComponent (object):
 
     def launch ():
         core.registerNew(MyComponent)
+        
+    def _handle_PacketIn (self, event):
+        print("packet recieved!")
