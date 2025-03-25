@@ -15,15 +15,12 @@ import pox.openflow.libopenflow_01 as of
 
 import time
 
-def launch (**kw):
-    print("this is a test, if this prints out; then it works!")
-    newObby = ICantThinkOfAGoodName()
-
-class ICantThinkOfAGoodName ():
+class MyComponent (object):
     def __init__ (self):
-        core.addListeners(self)
+        core.openflow.addListeners(self)
 
-    def _handle_PacketIn (self, event):
-        print("packet!")
-        print("packet parsed " + event.parsed)
-        print("port: " + event.port)
+    def _handle_ConnectionUp (self, event):
+        print("Switch %s has come up.", dpid_to_str(event.dpid))
+
+    def launch ():
+        core.registerNew(MyComponent)
