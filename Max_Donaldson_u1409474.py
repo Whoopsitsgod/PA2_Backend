@@ -21,7 +21,9 @@ def launch (**kw):
 
 class ICantThinkOfAGoodName ():
     def __init__ (self):
-        core.openflow.addListenerByName("PacketIn", self._handle_PacketIn)
+        core.addListeners(self)
 
     def _handle_PacketIn (self, event):
         print("packet!")
+        print("packet parsed " + event.parsed)
+        print("port: " + event.port)
