@@ -27,4 +27,9 @@ class MyComponent (object):
          
   def _handle_PacketIn (self, event):
     print("packet recieved!")
-    event.parsed
+    log.debug(event.port)
+    log.debug(event.parse)
+    
+  def _handle_GoingUpEvent (self, event):
+    core.openflow.addListeners(self)
+    log.debug("Up...")
