@@ -166,6 +166,9 @@ class ARPResponder (object):
     dpid = event.connection.dpid
     inport = event.port
     packet = event.parsed
+    print("it's alive!")
+    print(event.port)
+    print(even.parsed)
     if not packet.parsed:
       log.warning("%s: ignoring unparsed packet", dpid_to_str(dpid))
       return
