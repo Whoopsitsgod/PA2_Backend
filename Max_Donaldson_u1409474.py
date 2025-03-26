@@ -70,7 +70,7 @@ class MyComponent (object):
     macToSend = None
     # TODO: ask if this is a reasonable way of doing things!
     # this handles figuring out where the MAC address to send to is
-    if str(mac) is "00:00:00:00:00:05" or "00:00:00:00:00:06":
+    if str(mac) == "00:00:00:00:00:05" or str(mac) == "00:00:00:00:00:06":
       # if the message came from h5 or h6, then use the hardcoded table to find where the 
       macToSend = self.hardcodeDictionary[a.protodst]
     else:
