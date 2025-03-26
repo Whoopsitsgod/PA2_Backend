@@ -81,7 +81,7 @@ class MyComponent (object):
       r.protodst = a.protosrc
       r.protosrc = a.protodst
       log.debug("alright, we're getting to the danger zone")
-      r.hwsrc = "00:00:00:00:00:05"
+      r.hwsrc = EthAddr("00:00:00:00:00:05")
       log.debug("past the danger zone!")
       e = ethernet(type=packet.type, src=event.connection.eth_addr,
       dst=a.hwsrc)
