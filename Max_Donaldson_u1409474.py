@@ -26,6 +26,7 @@ def launch ():
 class MyComponent (object):
   def __init__ (self):
     core.openflow.addListeners(self)
+    self.roundRobinSendToH5 = True
  
   def _handle_ConnectionUp (self, event):
     print(f"Switch %s has come up.", dpid_to_str(event.dpid))
@@ -41,6 +42,7 @@ class MyComponent (object):
     log.debug(event.port)
 
     dpid = event.connection.dpid
+    inport = event.port
     packet = event.parsed
     # check if packet parsed correctly
     if not packet.parsed:
@@ -56,11 +58,41 @@ class MyComponent (object):
     mac = event.connection.eth_addr
     sourceIp = a.hwsrc
 
+    #DICTIONARY
+    # DPID = source MAC address
+    # mac = also source MAC address
+    # protosrc = source IP address
+    # protodest = desired IP address
     log.debug("this is the source MAC address " + dpid_to_str(dpid))
     log.debug("this is the protosrc (?) " + str(a.protosrc))
     log.debug("this is the mac address (?) " + str(mac))
     log.debug("this is the protodest (?) " + str(a.protodst))
-
+    
+    # ask if this is a reasonable way of doing things, if h1 is now always
+    # going to
+    if self.roundRobinSendToH5:
+      r = arp()
+      r.hwtype = a.hwtype
+      r.prototype = a.prototype
+      r.hwlen = a.hwlen
+      r.protolen = a.protolen
+      r.opcode = arp.REPLY
+      r.hwdst = a.hwsrc
+      r.protodst = a.protosrc
+      r.protosrc = a.protodst
+      log.debug("alright, we're getting to the danger zone")
+      r.hwsrc = "00:00:00:00:00:05"
+      log.debug("past the danger zone!")
+      e = ethernet(type=packet.type, src=event.connection.eth_addr,
+      dst=a.hwsrc)
+      e.payload = r
+      msg = of.ofp_packet_out()
+      msg.data = e.pack()
+      msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
+      msg.in_port = inport
+      event.connection.send(msg)
+    else:
+      log.debug("this shouldn't ever fire!")
     
   def _handle_GoingUpEvent (self, event):
     #this doesn't fire, for... some reason.
