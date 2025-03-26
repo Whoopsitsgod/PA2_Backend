@@ -29,6 +29,7 @@ class MyComponent (object):
     self.roundRobinSendToH5 = True
     #initialize hardcode table
     self.hardcodeDictionary = {}
+    self.connectionTable = {}
     #initialize 
  
   def _handle_ConnectionUp (self, event):
@@ -50,6 +51,7 @@ class MyComponent (object):
       log.warning("%s: ignoring unparsed packet", dpid_to_str(dpid))
       return
     
+    # TODO: check if this is an alright way of doing things, can I put methods that relate to ICMP packets here?
     a = packet.find('arp')
     # if packet didn't contain an ARP request
     if not a: 
@@ -72,17 +74,23 @@ class MyComponent (object):
     # this handles figuring out where the MAC address to send to is
     if str(mac) == "00:00:00:00:00:05" or str(mac) == "00:00:00:00:00:06":
       # if the message came from h5 or h6, then use the hardcoded table to find where the 
-      macToSend = self.hardcodeDictionary[a.protodst]
+      macToSend = self.hardcodeDictionary[str(a.protodst)]
     else:
-      # do round robin!
-      if self.roundRobinSendToH5:
-        macToSend = EthAddr("00:00:00:00:00:05")
-        self.roundRobinSendToH5 = False
+      # TODO: Add a method that prevents if the arp is sent quickly before it can respond. It can sometimes be assigned to *BOTH* h5 and h6
+      # now do round robin!
+      if str(a.protosrc) in self.connectionTable:
+        macToSend = self.connectionTable[str(a.protosrc)]
       else:
-        macToSend = EthAddr("00:00:00:00:00:06")
-        self.roundRobinSendToH5 = True
-      # add the source's IP address to the table to it's related MAC address
-      self.hardcodeDictionary[str(a.protosrc)] = mac
+        if self.roundRobinSendToH5:
+          macToSend = EthAddr("00:00:00:00:00:05")
+          self.connectionTable[str(a.protosrc)] = macToSend
+          self.roundRobinSendToH5 = False
+        else:
+          macToSend = EthAddr("00:00:00:00:00:06")
+          self.connectionTable[str(a.protosrc)] = macToSend
+          self.roundRobinSendToH5 = True
+        # add the source's IP address to the table to it's related MAC address
+        self.hardcodeDictionary[str(a.protosrc)] = mac
 
     #send the arp_response
     r = arp()
@@ -124,5 +132,4 @@ class MyComponent (object):
   # more arp_responder shows actually what things mean
   # 
   # flows:
-  # 
   # tcpdump -n -i h1-eth0
