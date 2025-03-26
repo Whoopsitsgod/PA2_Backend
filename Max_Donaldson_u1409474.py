@@ -28,7 +28,6 @@ class MyComponent (object):
   def _handle_PacketIn (self, event):
     print(f"packet recieved!")
     log.debug(event.port)
-    log.debug(event.parse)
 
     dpid = event.connection.dpid
     packet = event.parsed
