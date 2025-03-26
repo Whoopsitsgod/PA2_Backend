@@ -86,6 +86,16 @@ class MyComponent (object):
       e = ethernet(type=packet.type, src=event.connection.eth_addr,
       dst=a.hwsrc)
       e.payload = r
+      if packet.type == ethernet.VLAN_TYPE:
+        log.debug("whoopsies, this was needed")
+        v_rcv = packet.find('vlan')
+        e.payload = vlan(eth_type = e.type,
+                                 payload = e.payload,
+                                 id = v_rcv.id,
+                                 pcp = v_rcv.pcp)
+        e.type = ethernet.VLAN_TYPE
+      log.debug("%s answering ARP for %s" % (dpid_to_str(dpid),
+                str(r.protosrc)))
       msg = of.ofp_packet_out()
       msg.data = e.pack()
       msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
