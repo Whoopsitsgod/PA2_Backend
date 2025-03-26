@@ -1,4 +1,8 @@
 # my (Max Donaldson's) function
+# TO ASK TA:
+# is the _handle_packet set up correctly?
+# - it takes ~5-20 minutes to get packet and the packet it recieves is not an ARP request. Possibly could be from POWDER itself
+# 
 
 from pox.core import core
 import pox
@@ -51,7 +55,19 @@ class MyComponent (object):
     
     mac = event.connection.eth_addr
     sourceIp = a.hwsrc
+
+    log.debug("this is the dpid (dest. ip?) " + dpid_to_str(dpid))
+    log.debug("this is the source ip (?) " + sourceIp)
+    log.debug("this is the mac address (?) " + mac)
     
   def _handle_GoingUpEvent (self, event):
     #this doesn't fire, for... some reason.
     log.debug("Up...")
+
+  # NOTES:
+  # more arp_responder shows actually what things mean
+  # 
+  # flows:
+  # 
+  # tcpdump -n -i h1-eth0
+  
