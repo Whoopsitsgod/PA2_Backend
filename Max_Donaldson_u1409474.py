@@ -29,6 +29,17 @@ class MyComponent (object):
     print(f"packet recieved!")
     log.debug(event.port)
     log.debug(event.parse)
+
+    dpid = event.connection.dpid
+    packet = event.parsed
+    a = packet.find('arp')
+
+    log.debug("%s ARP %s %s => %s", dpid_to_str(dpid),
+      {arp.REQUEST:"request",arp.REPLY:"reply"}.get(a.opcode,
+      'op:%i' % (a.opcode,)), str(a.protosrc), str(a.protodst))
+
+    log.debug("MAC address: " + event.connection.eth_addr)
+    log.debug("IP destination: " + a.hwsrc)
     
   def _handle_GoingUpEvent (self, event):
     log.debug("Up...")
