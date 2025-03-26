@@ -68,19 +68,21 @@ class MyComponent (object):
     log.debug("this is the protodest (?) " + str(a.protodst))
     
     macToSend = None
-    # ask if this is a reasonable way of doing things!
+    # TODO: ask if this is a reasonable way of doing things!
     # this handles figuring out where the MAC address to send to is
-    if mac is EthAddr("00:00:00:00:00:05") or EthAddr("00:00:00:00:00:06"):
+    if str(mac) is "00:00:00:00:00:05" or "00:00:00:00:00:06":
       # if the message came from h5 or h6, then use the hardcoded table to find where the 
       macToSend = self.hardcodeDictionary[a.protodst]
     else:
+      # do round robin!
       if self.roundRobinSendToH5:
         macToSend = EthAddr("00:00:00:00:00:05")
         self.roundRobinSendToH5 = False
       else:
         macToSend = EthAddr("00:00:00:00:00:06")
         self.roundRobinSendToH5 = True
-      self.hardcodeDictionary[a.protodst] = mac
+      # add the source's IP address to the table to it's related MAC address
+      self.hardcodeDictionary[str(a.protosrc)] = mac
 
     #send the arp_response
     r = arp()
