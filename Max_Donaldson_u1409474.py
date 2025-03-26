@@ -21,11 +21,7 @@ def launch ():
 
 class MyComponent (object):
   def __init__ (self):
-    core.addListeners(self)
-
-  def _handle_GoingUpEvent (self, event):
     core.openflow.addListeners(self)
-    log.debug("Up...")
  
   def _handle_ConnectionUp (self, event):
     print(f"Switch %s has come up.", dpid_to_str(event.dpid))
@@ -55,3 +51,7 @@ class MyComponent (object):
     
     mac = event.connection.eth_addr
     sourceIp = a.hwsrc
+    
+  def _handle_GoingUpEvent (self, event):
+    #this doesn't fire, for... some reason.
+    log.debug("Up...")
