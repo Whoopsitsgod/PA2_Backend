@@ -56,9 +56,11 @@ class MyComponent (object):
     mac = event.connection.eth_addr
     sourceIp = a.hwsrc
 
-    log.debug("this is the dpid (dest. ip?) " + dpid_to_str(dpid))
-    log.debug("this is the source ip (?) " + sourceIp)
-    log.debug("this is the mac address (?) " + mac)
+    log.debug("this is the source MAC address " + dpid_to_str(dpid))
+    log.debug("this is the protosrc (?) " + str(a.protosrc))
+    log.debug("this is the mac address (?) " + str(mac))
+    log.debug("this is the protodest (?) " + str(a.protodst))
+
     
   def _handle_GoingUpEvent (self, event):
     #this doesn't fire, for... some reason.
@@ -70,4 +72,3 @@ class MyComponent (object):
   # flows:
   # 
   # tcpdump -n -i h1-eth0
-  
