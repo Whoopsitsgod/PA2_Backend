@@ -32,9 +32,15 @@ class MyComponent (object):
     dpid = event.connection.dpid
     packet = event.parsed
     a = packet.find('arp')
+    
+    if not a: 
+      log.debug("Packet did not contain ARP request")
+      return
 
-    log.debug("MAC address: " + event.connection.eth_addr)
-    log.debug("IP destination: " + a.hwsrc)
+    mac = event.connection.eth_addr
+    sourceIp = a.hwsrc
+
+    
     
   def _handle_GoingUpEvent (self, event):
     log.debug("Up...")
