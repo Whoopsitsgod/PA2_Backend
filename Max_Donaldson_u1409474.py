@@ -29,7 +29,6 @@ class MyComponent (object):
     self.roundRobinSendToH5 = True
     #initialize hardcode table
     self.hardcodeDictionary = {}
-    self.hardcodeDictionary[IPAddr()]
     #initialize 
  
   def _handle_ConnectionUp (self, event):
