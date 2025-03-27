@@ -126,7 +126,7 @@ class MyComponent (object):
 
       # this is the client-side flow rules
       flowRules = of.ofp_flow_mod()
-      flowRules.match.inport
+      flowRules.match.inport = inport
       flowRules.match.dl_type = pkt.ethernet.IP_TYPE
       flowRules.match.nw_dst = IPAddr("10.0.0.10")
 
