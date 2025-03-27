@@ -130,8 +130,8 @@ class MyComponent (object):
       flowRules.match.dl_type = pkt.ethernet.IP_TYPE
       flowRules.match.nw_dst = IPAddr("10.0.0.10")
 
-      flowRules.actions.append(of.ofp_action_nw_addr.set_dst())
-      flowRules.actions.append(of.ofp_action_dl_addr.set_dst())
+      flowRules.actions.append(of.ofp_action_nw_addr.set_dst(IPAddr("10.0.0.10")))
+      flowRules.actions.append(of.ofp_action_dl_addr.set_dst(macToSend))
       # TODO: CHANGE! THIS IS STATIC!
       flowRules.actions.append(of.ofp_action_output(port=5))
 
