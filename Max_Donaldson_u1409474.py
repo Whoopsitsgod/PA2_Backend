@@ -1,25 +1,18 @@
-# my (Max Donaldson's) function
-# TO ASK TA:
-# is the _handle_packet set up correctly?
-# - it takes ~5-20 minutes to get packet and the packet it recieves is not an ARP request. Possibly could be from POWDER itself
-# 
+# Max Donaldson's PA2 Assignment
+# Last worked on: 3/29/2025
+# arp_responder from POX (https://github.com/noxrepo/pox) helped directly for
+# inspiration and used/referenced heavily within the development of this
 
 from pox.core import core
 import pox
 log = core.getLogger()
- 
-from pox.lib.packet.ethernet import ethernet, ETHER_BROADCAST
+from pox.lib.packet.ethernet import ethernet
 from pox.lib.packet.arp import arp
 from pox.lib.packet.vlan import vlan
 import pox.lib.packet as pkt
 from pox.lib.addresses import IPAddr, EthAddr
-from pox.lib.util import dpid_to_str, str_to_bool
-from pox.lib.recoco import Timer
-from pox.lib.revent import EventHalt
- 
+from pox.lib.util import dpid_to_str
 import pox.openflow.libopenflow_01 as of
- 
-import time
  
 def launch ():
   core.registerNew(MyComponent)
@@ -28,66 +21,56 @@ class MyComponent (object):
   def __init__ (self):
     core.openflow.addListeners(self)
     self.roundRobinSendToH5 = True
-    #initialize hardcode table
+    #initialize hardcodeTable
     self.hardcodeDictionary = {}
     self.hardcodeDictionary["10.0.0.5"] = EthAddr("00:00:00:00:00:05")
     self.hardcodeDictionary["10.0.0.6"] = EthAddr("00:00:00:00:00:06")
+    #initialize connectionTable
     self.connectionTable = {}
+    #initialize portTable
     self.portTable = {}
     self.portTable["10.0.0.5"] = 5
     self.portTable["10.0.0.6"] = 6
-    #initialize 
+    
  
   def _handle_ConnectionUp (self, event):
-    print(f"Switch %s has come up.", dpid_to_str(event.dpid))
     fm = of.ofp_flow_mod()
-    fm.priority -= 0x1000 # lower than the default
+    fm.priority -= 0x1000
     fm.match.dl_type = ethernet.ARP_TYPE
     fm.actions.append(of.ofp_action_output(port=of.OFPP_CONTROLLER))
     event.connection.send(fm)
 
   def _handle_PacketIn (self, event):
-    #packet handled!
     dpid = event.connection.dpid
     inport = event.port
     packet = event.parsed
+
     # check if packet parsed correctly
     if not packet.parsed:
       log.warning("%s: ignoring unparsed packet", dpid_to_str(dpid))
       return
     
-    # TODO: check if this is an alright way of doing things, can I put methods that relate to ICMP packets here?
     a = packet.find('arp')
-    # if packet didn't contain an ARP request
     if packet.type == pkt.ethernet.ARP_TYPE:
-
-      #DICTIONARY
-      # DPID = source MAC address
-      # mac = also source MAC address
-      # protosrc = source IP address
-      # protodest = desired IP address
       mac = event.connection.eth_addr
+      # Connection debug help
       log.debug("============= CONNECTION SOURCE INFO =============")
       log.debug("this is the source IP (protosrc): " + str(a.protosrc))
       log.debug("this is the MAC adress (hwsrc): " + str(a.hwsrc))
       log.debug("this is the destination IP (protodst): " + str(a.protodst))
       log.debug("this is the port: " + str(inport))
       log.debug("============= CONNECTION SOURCE INFO =============")
-
       macToSend = None
-      # TODO: ask if this is a reasonable way of doing things!
+
       # this handles figuring out where the MAC address to send to is
       if str(a.hwsrc) == "00:00:00:00:00:05" or str(a.hwsrc) == "00:00:00:00:00:06":
-        # if the message came from h5 or h6, then use the hardcoded table to find where the 
-        log.debug("a.protodst is...." + str(a.protodst))
+        # if the message came from h5 or h6, then use the hardcoded table to find which MAC to send to
         macToSend = self.hardcodeDictionary[str(a.protodst)]
-        log.debug("the mac to send to is... " + str(macToSend))
       else:
-        # TODO: Add a method that prevents if the arp is sent quickly before it can respond. It can sometimes be assigned to *BOTH* h5 and h6
         # now do round robin!
         if str(a.protosrc) in self.connectionTable:
+          # this aids if the ARP to be sent twice by accident, which via round robin could mean h1 -> h5 *and* h6
           connectedHost = self.connectionTable[str(a.protosrc)]
-          log.debug("connectedhost is...." + connectedHost)
           macToSend = self.hardcodeDictionary[connectedHost]
         else:
           if self.roundRobinSendToH5:
@@ -106,7 +89,7 @@ class MyComponent (object):
       #add to the port table
       self.portTable[str(a.protosrc)] = inport
 
-      #send the arp_response
+      #construct the arp_response
       r = arp()
       r.hwtype = a.hwtype
       r.prototype = a.prototype
@@ -171,11 +154,8 @@ class MyComponent (object):
         log.debug("============= LINKING INFO =============")
       event.connection.send(flowRules)
 
-    #this is the race condition prevention 
     elif packet.type == pkt.ethernet.IP_TYPE:
       packetMsg = of.ofp_packet_out()
       packetMsg.data = event.ofp
       packetMsg.actions.append(of.ofp_action_output(port=of.OFPP_TABLE))
       event.connection.send(packetMsg)
-
-  # tcpdump -n -i h1-eth0
