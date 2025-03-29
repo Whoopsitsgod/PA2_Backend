@@ -140,6 +140,7 @@ class MyComponent (object):
         flowRules.match.inport = inport
         flowRules.match.dl_type = pkt.ethernet.IP_TYPE
         flowRules.match.nw_dst = a.protodst
+        flowRules.match.nw_src = a.protosrc
         
         actualIpDest = self.connectionTable[str(a.protosrc)]
         actualPortDest = self.portTable[actualIpDest]
@@ -156,6 +157,7 @@ class MyComponent (object):
         flowRules.match.inport = inport
         flowRules.match.dl_type = pkt.ethernet.IP_TYPE
         flowRules.match.nw_dst = IPAddr("10.0.0.10")
+        flowRules.match.nw_src = a.protosrc
         
         actualIpDest = self.connectionTable[str(a.protosrc)]
         actualPortDest = self.portTable[actualIpDest]
