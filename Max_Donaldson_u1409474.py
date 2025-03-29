@@ -47,7 +47,6 @@ class MyComponent (object):
     event.connection.send(fm)
 
   def _handle_PacketIn (self, event):
-    log.debug("packet recieved!")
     #packet handled!
     dpid = event.connection.dpid
     inport = event.port
@@ -81,8 +80,7 @@ class MyComponent (object):
       if str(a.hwsrc) == "00:00:00:00:00:05" or str(a.hwsrc) == "00:00:00:00:00:06":
         # if the message came from h5 or h6, then use the hardcoded table to find where the 
         log.debug("a.protodst is...." + str(a.protodst))
-        connectedHost2 = self.connectionTable[str(a.protosrc)]
-        macToSend = self.hardcodeDictionary[connectedHost2]
+        macToSend = self.hardcodeDictionary[str(a.protodst)]
         log.debug("the mac to send to is... " + str(macToSend))
       else:
         # TODO: Add a method that prevents if the arp is sent quickly before it can respond. It can sometimes be assigned to *BOTH* h5 and h6
@@ -136,30 +134,46 @@ class MyComponent (object):
       event.connection.send(msg)
 
 
-      # this is the client-side flow rules
-      flowRules = of.ofp_flow_mod()
-      flowRules.match.inport = inport
-      flowRules.match.dl_type = pkt.ethernet.IP_TYPE
-      flowRules.match.nw_dst = IPAddr("10.0.0.10")
-      
-      actualIpDest = self.connectionTable[str(a.protosrc)]
-      actualPortDest = self.portTable[actualIpDest]
-      flowRules.actions.append(of.ofp_action_nw_addr.set_dst(IPAddr(actualIpDest)))
-      flowRules.actions.append(of.ofp_action_dl_addr.set_dst(macToSend))
-      flowRules.actions.append(of.ofp_action_nw_addr.set_src(IPAddr("10.0.0.10")))
-      flowRules.actions.append(of.ofp_action_output(port=actualPortDest))
-      log.debug("============= LINKING INFO =============")
-      log.debug("Will be sent to IP: " + actualIpDest)
-      log.debug("Will be sent to MAC ADDRESS: " + str(macToSend))
-      log.debug("Will be sent to port: " + str(actualPortDest))
-      log.debug("============= LINKING INFO =============")
+      if str(a.hwsrc) == "00:00:00:00:00:05" or str(a.hwsrc) == "00:00:00:00:00:06":
+        # server to client 
+        flowRules = of.ofp_flow_mod()
+        flowRules.match.inport = inport
+        flowRules.match.dl_type = pkt.ethernet.IP_TYPE
+        flowRules.match.nw_dst = a.protodst
+        
+        actualIpDest = self.connectionTable[str(a.protosrc)]
+        actualPortDest = self.portTable[actualIpDest]
+        flowRules.actions.append(of.ofp_action_nw_addr.set_src(IPAddr("10.0.0.10")))
+        flowRules.actions.append(of.ofp_action_output(port=actualPortDest))
+        log.debug("============= LINKING INFO =============")
+        log.debug("Will be sent to IP: " + actualIpDest)
+        log.debug("Will be sent to MAC ADDRESS: " + str(macToSend))
+        log.debug("Will be sent to port: " + str(actualPortDest))
+        log.debug("============= LINKING INFO =============")
+      else:
+        # this is the client-side flow rules
+        flowRules = of.ofp_flow_mod()
+        flowRules.match.inport = inport
+        flowRules.match.dl_type = pkt.ethernet.IP_TYPE
+        flowRules.match.nw_dst = IPAddr("10.0.0.10")
+        
+        actualIpDest = self.connectionTable[str(a.protosrc)]
+        actualPortDest = self.portTable[actualIpDest]
+        flowRules.actions.append(of.ofp_action_nw_addr.set_dst(IPAddr(actualIpDest)))
+        flowRules.actions.append(of.ofp_action_dl_addr.set_dst(macToSend))
+        flowRules.actions.append(of.ofp_action_output(port=actualPortDest))
+        log.debug("============= LINKING INFO =============")
+        log.debug("Will be sent to IP: " + actualIpDest)
+        log.debug("Will be sent to MAC ADDRESS: " + str(macToSend))
+        log.debug("Will be sent to port: " + str(actualPortDest))
+        log.debug("============= LINKING INFO =============")
       event.connection.send(flowRules)
 
     #this is the race condition prevention 
     elif packet.type == pkt.ethernet.IP_TYPE:
-      log.debug("recieved IP_TYPE packet")
       packetMsg = of.ofp_packet_out()
       packetMsg.data = event.ofp
+      packetMsg.actions.append(of.ofp_action_output(port=of.OFPP_TABLE))
       event.connection.send(packetMsg)
 
   # tcpdump -n -i h1-eth0
